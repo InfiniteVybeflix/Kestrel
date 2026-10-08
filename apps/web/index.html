@@ -1,80 +1,151 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Kestrel</title>
+<meta name="theme-color" content="#f2b705">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9'><text y='8' font-size='8'>🦅</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
-:root{--bg:#eef2f5;--pn:#fff;--tx:#101820;--mu:#5d6e7e;--ac:#f0c230;--me:#d6e3ee;--bd:#d3dde6}
-@media(prefers-color-scheme:dark){:root{--bg:#0c131a;--pn:#16212b;--tx:#e8eef3;--mu:#8fa3b5;--me:#27425a;--bd:#243341}}
-*{box-sizing:border-box}html,body{height:100%;margin:0}
-body{display:flex;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-button,select,input{font:inherit;color:inherit}button{background:var(--ac);color:#101820;border:0;border-radius:8px;padding:6px 10px;cursor:pointer}
-button.g{background:none;color:var(--mu);padding:2px 6px}button:focus-visible,input:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-aside,main{display:flex;flex-direction:column;background:var(--pn)}aside{width:300px;border-right:1px solid var(--bd)}main{flex:1;min-width:0}
-header{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bd)}header b{flex:1;font:700 20px Georgia,serif}
-#list button{display:block;width:100%;text-align:left;background:none;border-radius:0;padding:12px;border-bottom:1px solid var(--bd);color:var(--tx)}
-#msgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
-.m{max-width:80%;background:var(--pn);border-radius:12px;padding:6px 10px;align-self:flex-start;overflow-wrap:anywhere}.m.me{align-self:flex-end;background:var(--me)}
-.m small{color:var(--mu)}.q{border-left:3px solid var(--ac);padding-left:6px;color:var(--mu)}.m img{max-width:100%;border-radius:8px}
-footer{display:flex;gap:6px;padding:8px;border-top:1px solid var(--bd)}footer input[type=text]{flex:1;min-width:0;background:var(--bg);border:1px solid var(--bd);border-radius:20px;padding:8px 12px}
-#rp{padding:4px 12px;color:var(--mu)}#bk{display:none}
-@media(max-width:700px){aside,main{width:100%}body.in aside{display:none}body:not(.in) main{display:none}#bk{display:block}}
+:root{--g:#f2b705;--g2:#ffe08a;--ink:#12202f;--pa:#fff9e8}
+*{box-sizing:border-box}html,body{height:100%;margin:0}[hidden]{display:none!important}
+body{font:16px/1.45 Figtree,system-ui,sans-serif;color:var(--ink);background:var(--pa)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;border-radius:14px;padding:13px 18px;font-weight:600;background:var(--ink);color:var(--g2)}
+button.g{background:none;color:var(--ink);padding:8px 10px;font-size:18px}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+#home{min-height:100%;display:grid;place-items:center;padding:24px;background:radial-gradient(120% 90% at 15% 0%,#fff0b8 0%,#f7c829 42%,#dd9600 100%)}
+.card{width:min(100%,380px);text-align:center}.card svg{width:92px}
+h1{font:700 clamp(56px,16vw,88px)/1 Fraunces,Georgia,serif;margin:4px 0;letter-spacing:-.025em}
+.card p{margin:0 0 28px;font-size:18px}
+.card input{width:100%;padding:15px 16px;border:0;border-radius:14px;background:#fffc;text-align:center;margin-bottom:12px}
+.row{display:flex;gap:8px}.row input{margin:0!important;letter-spacing:.25em;font-weight:600;text-transform:uppercase}
+#mk{width:100%;font-size:18px;padding:16px}.or{margin:18px 0 14px;font-weight:600;opacity:.6}
+.card small{display:block;margin-top:26px;opacity:.75}
+#room{height:100%;height:100dvh;display:flex;flex-direction:column;max-width:760px;margin:0 auto;box-shadow:0 0 0 1px #12202f14}
+#room>header{display:flex;align-items:center;gap:2px;padding:10px 8px;padding-top:calc(10px + env(safe-area-inset-top));background:linear-gradient(#ffdc62,#f2b705)}
+.t{flex:1;min-width:0}#code{background:none;color:var(--ink);padding:0;font:700 22px Fraunces,Georgia,serif;letter-spacing:.04em}
+#sub{display:block;font-size:13px;opacity:.75}#ex{background:#fff8;border:0;border-radius:10px;padding:6px;max-width:92px}
+#ring{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--ink);color:var(--g2)}#ring span{flex:1}#ring button{background:var(--g);color:var(--ink);padding:8px 12px}
+#msgs{flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:6px}
+.m{max-width:82%;padding:7px 12px;border-radius:16px 16px 16px 4px;background:#fff;box-shadow:0 1px 2px #12202f24;align-self:flex-start;overflow-wrap:anywhere}
+.m.me{align-self:flex-end;background:#ffd95a;border-radius:16px 16px 4px 16px}
+.by{font-weight:600;font-size:13px}.q{border-left:3px solid var(--g);padding-left:8px;opacity:.7;font-size:14px}
+.m img{max-width:100%;border-radius:10px}.m audio{max-width:100%}time{font-size:11px;opacity:.55}
+.sys{align-self:center;font-size:13px;opacity:.6;text-align:center}.acts{display:flex;gap:2px}.acts button{padding:2px 6px;font-size:16px}
+#rp{padding:6px 14px;background:#ffe9a8;cursor:pointer;font-size:14px}
+footer{display:flex;gap:4px;align-items:center;padding:8px 8px calc(8px + env(safe-area-inset-bottom));border-top:1px solid #12202f1a}
+footer input[type=text]{flex:1;min-width:0;padding:12px 16px;border-radius:24px;border:1px solid #12202f26;background:#fff}
+#sd{border-radius:50%;width:46px;height:46px;padding:0}
+#call{position:fixed;inset:0;background:var(--ink);display:flex;flex-direction:column;z-index:5}
+#tiles{flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;padding:6px}
+.tile{position:relative;background:#243a50;border-radius:14px;overflow:hidden;min-height:120px}.tile video{width:100%;height:100%;object-fit:cover}
+.tile span{position:absolute;left:10px;bottom:8px;color:#fff;font-size:13px;text-shadow:0 1px 3px #000}
+#ctl{display:flex;justify-content:center;gap:14px;padding:14px 14px calc(14px + env(safe-area-inset-bottom))}
+#ctl button{width:56px;height:56px;border-radius:50%;padding:0;font-size:22px;background:#fff2}#ctl #end{background:#d6402f}
 </style></head><body>
-<aside><header><b>Kestrel</b><button id=nc>Chat</button><button id=ns>Status</button><button id=jn>Join</button></header><div id=list></div></aside>
-<main><header><button id=bk class=g>‹</button><b id=ttl>Kestrel</b><small id=net></small>
-<select id=ex title="Disappearing messages"><option value=0>Keep</option><option value=86400>24 hours</option><option value=604800>7 days</option></select></header>
-<div id=msgs></div><div id=rp></div>
-<footer><label class=g>📎<input id=fi type=file accept="image/*" hidden></label><input id=tx type=text placeholder="Message" autocomplete=off><button id=mc class=g title="Hold to record">🎙</button><button id=sd>Send</button></footer></main>
+<section id=home><div class=card>
+<svg viewBox="0 0 64 40" aria-hidden=true><path d="M2 20C16 2 28 8 32 24 36 8 48 2 62 20 50 16 40 22 32 38 24 22 14 16 2 20Z" fill="#12202f"/></svg>
+<h1>Kestrel</h1><p>Private rooms. No accounts. Just you and your people.</p>
+<input id=nm placeholder="Your name" maxlength=24 autocomplete=nickname aria-label="Your name">
+<button id=mk>Create a room</button><div class=or>or enter a code</div>
+<div class=row><input id=cd placeholder="ABC-DEF" maxlength=7 aria-label="Room code"><button id=en>Enter</button></div>
+<small>Messages and calls go straight between browsers, encrypted. Nothing is stored on a server.</small></div></section>
+
+<section id=room hidden>
+<header><button class=g id=bk aria-label=Leave>‹</button><div class=t><button id=code title="Copy invite link"></button><span id=sub></span></div>
+<select id=ex aria-label="Disappearing messages"><option value=0>Keep</option><option value=86400000>1 day</option><option value=604800000>7 days</option></select>
+<button class=g id=vc aria-label="Voice call">📞</button><button class=g id=vv aria-label="Video call">🎥</button></header>
+<div id=ring hidden><span id=rt></span><button id=j1>Join</button><button id=j2>Join with video</button></div>
+<div id=msgs aria-live=polite></div><div id=rp hidden></div>
+<footer><label class=g style="cursor:pointer;padding:8px">📎<input id=fi type=file accept="image/*" hidden></label>
+<input id=tx type=text placeholder="Message" autocomplete=off aria-label=Message><button class=g id=mc aria-label="Hold to record">🎙</button><button id=sd aria-label=Send>➤</button></footer></section>
+
+<div id=call hidden><div id=tiles></div><div id=ctl><button id=mic aria-label=Mute>🎤</button><button id=cam aria-label=Camera>📷</button><button id=end aria-label="Leave call">✕</button></div></div>
+
 <script type=module>
-import {deriveKey,seal,open} from './crypto.js';
-const $=s=>document.querySelector(s),L=(k,d)=>JSON.parse(localStorage.getItem(k)||d),S=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-let cfg=L('cfg','{}'),rooms=L('rooms','[]'),outbox=L('outbox','[]'),cur=null,reply=null,busy=false;const keys={},st={};
-const gh=(p,o={})=>fetch('https://api.github.com'+p,{...o,headers:{Authorization:'Bearer '+cfg.token,Accept:'application/vnd.github+json',...(o.headers||{})}});
-const key=r=>keys[r.repo+r.n]??=deriveKey(r.secret,r.repo+'#'+r.n);
+import {makeCode,normCode,addMsg} from './core.js';
+const $=s=>document.querySelector(s),el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 const OK=/^data:(image|audio)\/[\w.+-]+(;codecs=[\w.]+)?;base64,[A-Za-z0-9+\/=]+$/;
-const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
-function list(){const l=$('#list');l.replaceChildren(...rooms.map(r=>{const b=el('button','',(r.kind=='status'?'◔ ':'')+r.name);b.onclick=()=>go(r);return b}))}
-function add(r){rooms.push(r);S('rooms',rooms);list();go(r)}
-async function create(kind){const name=prompt('Name'),secret=crypto.randomUUID();if(!name)return;
- const r=await gh(`/repos/${cfg.repo}/issues`,{method:'POST',body:JSON.stringify({title:'kestrel room'})}),j=await r.json();
- if(!j.number)return alert('Could not create the room. Check the token can write issues on '+cfg.repo);
- prompt('Share this invite code privately (it is the encryption key):',`${cfg.repo}#${j.number}#${secret}`);add({repo:cfg.repo,n:j.number,name,secret,kind})}
-function join(){const [repo,n,secret]=(prompt('Paste invite code')||'').split('#');if(!secret)return;add({repo,n:+n,name:'Chat '+n,secret,kind:'chat'})}
-function go(r){cur=r;document.body.classList.add('in');$('#ttl').textContent=r.name;$('#ex').value=r.kind=='status'?86400:0;draw();tick()}
-async function flush(){if(busy)return;busy=true;try{for(const o of [...outbox]){const r=rooms.find(x=>x.n==o.n&&x.repo==o.repo);if(!r){outbox.splice(outbox.indexOf(o),1);continue}
- const body=`kestrel:v1 exp=${o.exp}\n`+await seal(await key(r),o.obj);
- const res=await gh(`/repos/${o.repo}/issues/${o.n}/comments`,{method:'POST',body:JSON.stringify({body})}).catch(()=>null);
- if(!res||!res.ok)break;outbox.splice(outbox.indexOf(o),1)}}finally{S('outbox',outbox);busy=false;$('#net').textContent=outbox.length?`sending ${outbox.length}…`:''}}
-async function send(obj){if(!cur)return;const ttl=+$('#ex').value;if(reply&&!obj.rx&&!obj.del)obj.re=reply.id;reply=null;$('#rp').textContent='';
- outbox.push({repo:cur.repo,n:cur.n,obj,exp:ttl?Math.floor(Date.now()/1e3)+ttl:0});S('outbox',outbox);await flush();tick()}
-async function tick(){if(!cfg.token)return;await flush();if(!cur)return;const s=st[cur.n]??={since:'',etag:'',m:new Map()};
- const r=await gh(`/repos/${cur.repo}/issues/${cur.n}/comments?per_page=100${s.since?'&since='+s.since:''}`,{headers:s.etag?{'If-None-Match':s.etag}:{}}).catch(()=>null);
- if(!r||!r.ok)return;s.etag=r.headers.get('etag');const k=await key(cur);let fresh=0;
- for(const c of await r.json()){if(c.updated_at>s.since)s.since=c.updated_at;if(s.m.has(c.id))continue;
-  const h=/^kestrel:v1 exp=(\d+)\n(\S+)$/.exec(c.body||'');if(!h)continue;
-  try{s.m.set(c.id,{id:c.id,by:c.user.login,exp:+h[1],...await open(k,h[2])});fresh++}catch{}}
- if(fresh){draw();if(document.hidden&&Notification.permission=='granted')new Notification('Kestrel',{body:'New message in '+cur.name})}}
-function draw(){if(!cur)return;const all=[...(st[cur.n]?.m.values()||[])].sort((a,b)=>a.id-b.id),now=Date.now()/1e3,by=new Map(all.map(m=>[m.id,m]));
- const dead=new Set(all.filter(m=>m.del&&by.get(m.del)?.by==m.by).map(m=>m.del)),rx={};for(const m of all)if(m.rx)(rx[m.rx]??=[]).push(m.e);
- const box=$('#msgs');box.replaceChildren(...all.filter(m=>m.t!=null||m.a).filter(m=>!dead.has(m.id)&&!(m.exp&&m.exp<now)).map(m=>{
-  const d=el('div','m'+(m.by==cfg.me?' me':''));d.append(el('small','',m.by));
-  if(m.re&&by.get(m.re))d.append(el('div','q',(by.get(m.re).t||'attachment').slice(0,60)));
+const uid=localStorage.ku||=crypto.randomUUID();
+let name=localStorage.kn||'',code,hostId,me,peer,host,msgs=[],reply=null,local=null,dirty=0,rec;
+const conns=new Map(),calls=new Map(),inCall=new Set(),pend=new Set();
+$('#nm').value=name;const h0=normCode(location.hash.slice(1));if(h0)$('#cd').value=h0;
+const claim=id=>new Promise((ok,no)=>{const p=id?new Peer(id):new Peer();p.on('open',()=>ok(p));p.on('error',no)});
+const bc=d=>conns.forEach(p=>p.c.open&&p.c.send(d)),save=()=>localStorage['k_'+code]=JSON.stringify(msgs.filter(m=>!m.s).slice(-200));
+const sys=t=>{addMsg(msgs,{id:crypto.randomUUID(),ts:Date.now(),s:1,t});draw()};
+const count=()=>$('#sub').textContent=conns.size?`${conns.size+1} in this room`:'Only you here. Share the code.';
+const fail=()=>{$('#sub').textContent='Offline';sys("Can't reach the connection service. Check your internet and reopen the room.")};
+
+async function begin(raw){const c=normCode(raw);if(!c)return alert('Room codes look like ABC-DEF.');
+ name=$('#nm').value.trim();if(!name){$('#nm').focus();return alert('Pick a name first.')}
+ localStorage.kn=name;code=c;hostId='kestrel-'+c.toLowerCase();history.replaceState(null,'','#'+c);
+ msgs=JSON.parse(localStorage['k_'+c]||'[]');$('#home').hidden=true;$('#room').hidden=false;$('#code').textContent=c;$('#sub').textContent='Connecting…';draw();
+ try{peer=await claim(hostId);host=true}catch(e){if(e.type!='unavailable-id')return fail();try{peer=await claim();host=false}catch{return fail()}}
+ me=peer.id;peer.on('connection',setup);peer.on('call',onCall);peer.on('disconnected',()=>peer.reconnect());
+ peer.on('error',e=>{if(e.type=='peer-unavailable'&&String(e.message).includes(hostId)){peer.destroy();begin(c)}});
+ if(host){sys('Room open. Share the code or tap it to copy an invite link.');count()}else link(hostId)}
+function link(id){if(id==me||conns.has(id)||pend.has(id))return;pend.add(id);setup(peer.connect(id,{serialization:'json'}))}
+function setup(c){
+ c.on('open',()=>{pend.delete(c.peer);if(conns.has(c.peer))return c.close();conns.set(c.peer,{c,name:'Someone'});
+  c.send({t:'hi',name,list:[...conns.keys()]});c.send({t:'h',m:msgs.filter(m=>!m.s).slice(-50)});if(local)c.send({t:'cs',on:1});count()});
+ c.on('data',d=>{const p=conns.get(c.peer);if(!p||!d)return;
+  if(d.t=='hi'){p.name=String(d.name||'Someone').slice(0,24);sys(p.name+' joined');if(c.peer==hostId)(d.list||[]).forEach(link);count()}
+  else if(d.t=='h')(d.m||[]).forEach(got);else if(d.t=='m')got(d.m);else if(d.t=='rx')react(d.id,d.e,0);
+  else if(d.t=='cs'){d.on?inCall.add(c.peer):inCall.delete(c.peer);ring();if(d.on)maybeCall(c.peer)}});
+ c.on('close',()=>{pend.delete(c.peer);const p=conns.get(c.peer);if(p&&p.c==c){conns.delete(c.peer);inCall.delete(c.peer);sys(p.name+' left');count();ring()}})}
+function got(m){if(!m||!m.id||typeof m.by!='string')return;
+ const s={id:String(m.id).slice(0,50),u:String(m.u||'').slice(0,50),by:m.by.slice(0,24),ts:+m.ts||Date.now(),t:String(m.t||'').slice(0,4000),a:OK.test(m.a)?m.a:'',re:String(m.re||''),x:+m.x||0,r:Array.isArray(m.r)?m.r.slice(0,50).map(String):[]};
+ if(addMsg(msgs,s)){save();draw();if(document.hidden)document.title='● Kestrel'}}
+function post(o){const ttl=+$('#ex').value,m={id:crypto.randomUUID(),u:uid,by:name,ts:Date.now(),t:'',a:'',re:reply?reply.id:'',x:ttl?Date.now()+ttl:0,r:[],...o};
+ reply=null;$('#rp').hidden=true;addMsg(msgs,m);save();draw();bc({t:'m',m})}
+function react(id,e,mine){const m=msgs.find(x=>x.id==id);if(m&&m.r.length<50){m.r.push(String(e));save();draw()}if(mine)bc({t:'rx',id,e})}
+const playing=()=>[...document.querySelectorAll('audio')].some(a=>!a.paused);
+function draw(){if(playing()){dirty=1;return}const now=Date.now(),box=$('#msgs'),by=new Map(msgs.map(m=>[m.id,m]));
+ box.replaceChildren(...msgs.filter(m=>!m.x||m.x>now).map(m=>{if(m.s)return el('div','sys',m.t);
+  const d=el('div','m'+(m.u==uid?' me':''));if(m.u!=uid)d.append(el('div','by',m.by));
+  const q=by.get(m.re);if(q)d.append(el('div','q',q.t?q.t.slice(0,70):'Attachment'));
   if(m.t)d.append(el('div','',m.t));
-  if(m.a&&OK.test(m.a)){const a=m.a.startsWith('data:image')?el('img'):el('audio');a.src=m.a;if(a.tagName=='AUDIO')a.controls=true;d.append(a)}
-  if(rx[m.id])d.append(el('div','',rx[m.id].join(' ')));
-  const bar=el('div'),b=(t,f)=>{const x=el('button','g',t);x.onclick=f;bar.append(x)};
-  b('↩',()=>{reply=m;$('#rp').textContent='Replying to '+m.by});b('😀',()=>{const e=prompt('Reaction','👍');if(e)send({rx:m.id,e})});
-  if(m.by==cfg.me)b('🗑',()=>send({del:m.id}));d.append(bar);return d}));box.scrollTop=box.scrollHeight}
+  if(m.a){const a=m.a.startsWith('data:image')?el('img'):el('audio');a.src=m.a;if(a.tagName=='AUDIO')a.controls=true;d.append(a)}
+  if(m.r.length)d.append(el('div','',m.r.join(' ')));
+  d.append(el('time','',new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})));
+  const bar=el('div','acts');bar.hidden=true;
+  [['↩',()=>{reply=m;$('#rp').hidden=false;$('#rp').textContent='Replying to '+m.by+'  ✕'}],...['👍','❤️','😂'].map(e=>[e,()=>react(m.id,e,1)])]
+   .forEach(([t,f])=>{const b=el('button','g',t);b.onclick=ev=>{ev.stopPropagation();f();bar.hidden=true};bar.append(b)});
+  d.append(bar);d.onclick=()=>bar.hidden=!bar.hidden;return d}));box.scrollTop=box.scrollHeight}
+document.addEventListener('pause',()=>{if(dirty&&!playing()){dirty=0;draw()}},true);document.addEventListener('ended',()=>{dirty=0;draw()},true);
+setInterval(()=>{if(code)draw()},30000);addEventListener('focus',()=>document.title='Kestrel');
+
+// Calls: full mesh, the higher peer id always dials, so pairs never double-connect.
+function tile(id,s,self){untile(id);const t=el('div','tile');t.id='t-'+id;const v=el('video');v.srcObject=s;v.autoplay=true;v.playsInline=true;v.muted=!!self;
+ t.append(v,el('span','',self?'You':conns.get(id)?.name||'Guest'));$('#tiles').append(t)}
+const untile=id=>document.getElementById('t-'+id)?.remove();
+const hook=(id,c)=>{calls.set(id,c);c.on('stream',s=>tile(id,s));c.on('close',()=>{calls.delete(id);untile(id)})};
+const maybeCall=id=>{if(local&&!calls.has(id)&&conns.has(id)&&me>id)hook(id,peer.call(id,local))};
+function onCall(c){if(!local||calls.has(c.peer))return c.close();c.answer(local);hook(c.peer,c)}
+async function joinCall(v){if(local)return;try{local=await navigator.mediaDevices.getUserMedia({audio:true,video:v})}catch{return alert('Allow microphone'+(v?' and camera':'')+' access to join the call.')}
+ $('#call').hidden=false;$('#cam').hidden=!v;tile('me',local,1);bc({t:'cs',on:1});inCall.forEach(maybeCall);ring()}
+function leaveCall(){calls.forEach(c=>c.close());calls.clear();local?.getTracks().forEach(t=>t.stop());local=null;$('#tiles').replaceChildren();$('#call').hidden=true;bc({t:'cs',on:0});ring()}
+function ring(){$('#ring').hidden=!(inCall.size&&!local);$('#rt').textContent=`📞 ${inCall.size} in a call`}
+const flip=(kind,b)=>{const t=local?.[kind]()[0];if(t){t.enabled=!t.enabled;$(b).style.opacity=t.enabled?1:.4}};
+
+// Attachments
 const rd=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
-async function shrink(f){const im=await createImageBitmap(f),sc=Math.min(1,480/Math.max(im.width,im.height)),c=document.createElement('canvas');
+async function shrink(f){const im=await createImageBitmap(f),sc=Math.min(1,800/Math.max(im.width,im.height)),c=document.createElement('canvas');
  c.width=im.width*sc;c.height=im.height*sc;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
- for(let q=.7;q>.1;q-=.1){const u=c.toDataURL('image/jpeg',q);if(u.length<40000)return u}alert('Image is too detailed to send.')}
-let rec;async function mic(on){if(on){const s=await navigator.mediaDevices.getUserMedia({audio:true}),ch=[];rec=new MediaRecorder(s,{audioBitsPerSecond:12000});
- rec.ondataavailable=e=>ch.push(e.data);rec.onstop=async()=>{s.getTracks().forEach(t=>t.stop());const u=await rd(new Blob(ch,{type:rec.mimeType}));u.length<40000?send({a:u}):alert('Voice note is too long (15 s max).')};
- rec.start();setTimeout(()=>rec.state=='recording'&&rec.stop(),15000)}else if(rec?.state=='recording')rec.stop()}
-$('#nc').onclick=()=>create('chat');$('#ns').onclick=()=>create('status');$('#jn').onclick=join;$('#bk').onclick=()=>document.body.classList.remove('in');
-$('#sd').onclick=()=>{const t=$('#tx').value.trim();if(t){$('#tx').value='';send({t})}};$('#tx').onkeydown=e=>e.key=='Enter'&&$('#sd').click();
-$('#fi').onchange=async e=>{const u=await shrink(e.target.files[0]);if(u)send({a:u});e.target.value=''};
-$('#mc').onpointerdown=()=>mic(true);$('#mc').onpointerup=$('#mc').onpointerleave=()=>mic(false);
-addEventListener('offline',()=>$('#net').textContent='offline');addEventListener('online',tick);
-if(!cfg.token){cfg={repo:prompt('GitHub repo that hosts Kestrel (owner/name)'),token:prompt('GitHub token with issues write access')};}
-if(cfg.token){cfg.me=(await (await gh('/user')).json()).login;S('cfg',cfg);Notification.requestPermission();list();setInterval(tick,3000)}
+ for(let q=.8;q>.2;q-=.1){const u=c.toDataURL('image/jpeg',q);if(u.length<250000)return u}alert('That image is too large to send.')}
+async function mic(on){if(on){let s;try{s=await navigator.mediaDevices.getUserMedia({audio:true})}catch{return alert('Allow microphone access to record.')}
+ const ch=[];rec=new MediaRecorder(s,{audioBitsPerSecond:24000});rec.ondataavailable=e=>ch.push(e.data);
+ rec.onstop=async()=>{s.getTracks().forEach(t=>t.stop());const u=await rd(new Blob(ch,{type:rec.mimeType}));u.length<400000?post({a:u}):alert('Voice note too long (60 s max).')};
+ rec.start();setTimeout(()=>rec.state=='recording'&&rec.stop(),60000)}else if(rec?.state=='recording')rec.stop()}
+
+// Wiring
+$('#mk').onclick=()=>begin(makeCode());$('#en').onclick=()=>begin($('#cd').value);$('#cd').onkeydown=e=>e.key=='Enter'&&begin($('#cd').value);
+$('#sd').onclick=()=>{const t=$('#tx').value.trim();if(t){$('#tx').value='';post({t})}};$('#tx').onkeydown=e=>e.key=='Enter'&&$('#sd').click();
+$('#fi').onchange=async e=>{const u=e.target.files[0]&&await shrink(e.target.files[0]);if(u)post({a:u});e.target.value=''};
+$('#mc').onpointerdown=()=>mic(1);$('#mc').onpointerup=$('#mc').onpointerleave=()=>mic(0);
+$('#rp').onclick=()=>{reply=null;$('#rp').hidden=true};
+$('#code').onclick=()=>{navigator.clipboard?.writeText(location.origin+location.pathname+'#'+code);$('#sub').textContent='Invite link copied';setTimeout(count,1500)};
+$('#vc').onclick=()=>joinCall(false);$('#vv').onclick=()=>joinCall(true);$('#j1').onclick=()=>joinCall(false);$('#j2').onclick=()=>joinCall(true);
+$('#mic').onclick=()=>flip('getAudioTracks','#mic');$('#cam').onclick=()=>flip('getVideoTracks','#cam');$('#end').onclick=leaveCall;
+$('#bk').onclick=()=>{history.replaceState(null,'',location.pathname);location.reload()};
 </script></body></html>

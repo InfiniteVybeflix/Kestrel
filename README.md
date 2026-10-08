@@ -1,29 +1,26 @@
 # Kestrel
 
-Encrypted messaging that runs entirely on GitHub: no servers of your own.
+Private chat rooms and calls that run in the browser. GitHub only hosts the page.
+
+Open the site, pick a name, **Create a room** (or enter a friend's code), and chat. No accounts, no tokens.
 
 ## How it works
-GitHub Actions can't hold live connections (jobs are short-lived and accept no inbound traffic), so Kestrel uses GitHub for everything else:
+- **Hosting:** `deploy-web.yml` tests and publishes `apps/web` to GitHub Pages.
+- **Messages and calls:** browsers connect directly (WebRTC, encrypted by DTLS). The free public PeerJS cloud introduces the browsers to each other and Google's public STUN helps them find a route. Neither sees your messages. You run no servers.
+- **Rooms:** the first person to open a code hosts it; anyone entering the same code joins. People already inside stay connected if the host leaves, and the next person to enter the code reopens the room.
+- **History:** stored in each browser (last 200 messages) and shared with people who join. Messages sent while alone are synced when someone connects.
 
-- **Hosting:** the web app (`apps/web`) is deployed to GitHub Pages by `deploy-web.yml`.
-- **Messages:** each room is an Issue in this repo; each message is an AES-GCM encrypted comment. GitHub only ever sees ciphertext.
-- **Delivery:** clients poll the GitHub API every 3 s, so messages arrive within a few seconds.
-- **Disappearing messages and 24 h Status:** `cleanup.yml` deletes expired comments every ~10 min; clients hide them immediately.
-- **Offline:** unsent messages queue locally and retry automatically.
-
-## Setup
-1. Create a **public** GitHub repo, push this folder to `main`.
-2. Settings → Pages → Source: **GitHub Actions**. Settings → Actions → allow workflows to write issues.
-3. Open the Pages URL. Enter the repo (`owner/name`) and a token (classic with `public_repo`, or fine-grained with Issues: read/write).
-4. **Chat** creates a room and shows an invite code. Share it privately, since it contains the encryption key. **Join** accepts a code. **Status** is a room whose messages expire after 24 h.
+## Deploy
+1. Push this folder to a GitHub repo's `main` branch.
+2. Settings → Pages → Source: **GitHub Actions**.
+3. Share the Pages link. Invite links look like `https://you.github.io/repo/#ABC-DEF`.
 
 ## Features
-Real-time-ish chat, replies, reactions, delete for everyone, photos, 15 s voice notes, disappearing messages, status, group rooms (anyone with the invite), offline queue, dark mode, notifications while the tab is open, tests + CI + auto-deploy.
+Rooms by code, group chat, replies, reactions, photos, voice notes, disappearing messages, voice and video group calls (small groups), mobile-first golden UI.
 
 ## Limits
-- Attachments are limited to about 30 KB (a comment holds 64 KB); images are shrunk automatically.
-- No delivery or read receipts, push when closed, calls, or message search.
-- Room members can see who posted (GitHub usernames). Public repos hide nothing but content.
-- GitHub rate limits apply (5,000 API calls/hour per token). Scheduled workflows pause after 60 days of repo inactivity.
+- Strict corporate or mobile networks can block direct connections; calls may fail there (a TURN relay would be needed).
+- Anyone with the code can join, so share it privately.
+- Mesh calls suit about 4 people.
 
 Run tests: `node --test tests/`
