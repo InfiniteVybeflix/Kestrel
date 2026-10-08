@@ -5,37 +5,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9'><text y='8' font-size='8'>🦅</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js">
-// Rooms hub, settings, destroy, install
-const wipe=c=>{localStorage.removeItem('k_'+c);localStorage.removeItem('kw_'+c)},saveRoom=()=>putRooms(rooms().map(r=>r.code==code?room:r));
-const toast=t=>{const e=$('#toast');e.textContent=t;e.hidden=false;setTimeout(()=>e.hidden=true,4500)};
-const beep=()=>{try{const a=new AudioContext(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=880;g.gain.value=.05;o.start();o.stop(a.currentTime+.09)}catch{}};
-const OPT=o=>Object.keys(o).map(k=>[k,k[0].toUpperCase()+k.slice(1)]);
-const pick=cb=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async()=>{const u=i.files[0]&&await shrink(i.files[0],1200,450000);if(u)cb(u)};i.click()};
-function nuke(msg){wipe(code);putRooms(rooms().filter(r=>r.code!=code));sessionStorage.kt=msg;location.reload()}
-function prune(){const l=rooms(),dead=l.filter(r=>expired(r)||r.d=='close');dead.forEach(r=>wipe(r.code));if(dead.length)putRooms(l.filter(r=>!dead.includes(r)))}
-function drawHub(){prune();const l=rooms().sort((a,b)=>b.ts-a.ts);
- $('#rl').replaceChildren(...(l.length?[el('h3','','Your rooms'),...l.map(r=>{const b=el('div','rm'),t=el('span');b.tabIndex=0;b.setAttribute('role','button');
-  t.append(el('b','',r.name||r.code),el('span','pv',(r.pv||r.code)+(typeof r.d=='number'?' · ⏳ '+left(r.d-Date.now()):'')));
-  const x=el('button','g x','✕');x.title='Delete from this device';x.onclick=e=>{e.stopPropagation();if(confirm('Delete this room from this device?')){wipe(r.code);putRooms(rooms().filter(y=>y.code!=r.code));drawHub()}};
-  b.onclick=()=>begin(r.code);b.onkeydown=e=>e.key=='Enter'&&b.click();b.append(t,x);return b})]:[]))}
-const defsG=[['name','Display name','text'],['theme','Theme','select',[['auto','Match device'],['day','Light'],['night','Night']]],['accent','Accent colour','select',OPT(AC)],['wp','Chat wallpaper','select',[...OPT(WP),['custom','My photo']]],['dim','Dim wallpaper','range'],['font','Text size','select',[[.9,'Small'],[1,'Normal'],[1.12,'Large'],[1.25,'Huge']]],['bub','Bubble shape','select',[['round','Rounded'],['square','Square']]],['enter','Enter key sends','toggle'],['time','Show message times','toggle'],['sound','Message sound','toggle'],['notif','Notifications when hidden','toggle'],['save','Save chat history on this device','toggle'],['ttl','New messages disappear','select',[[0,'Never'],[86400000,'After 1 day'],[604800000,'After 7 days']]]];
-function openSettings(){build($('#sf'),defsG,S,k=>{saveS();look(room||{});if(k=='notif'&&S.notif)Notification.requestPermission();if(k=='name')$('#nm').value=S.name});
- const b=el('button','g2','Use my own photo as wallpaper');b.onclick=()=>pick(u=>{try{localStorage.kw=u}catch{return toast('Not enough storage for that photo.')}S.wp='custom';saveS();look(room||{});openSettings()});$('#sf').append(b);if(!$('#st').open)$('#st').showModal()}
-function openRoom(){build($('#rf'),[['name','Room name','text'],['accent','Room accent','select',[['','Same as app'],...OPT(AC)]],['wp','Room wallpaper','select',[['','Same as app'],...OPT(WP),['custom','My photo']]],['mute','Mute alerts','toggle']],room,()=>{saveRoom();look(room);$('#rt2').textContent=room.name});
- const b=el('button','g2','Use my own photo in this room');b.onclick=()=>pick(u=>{try{localStorage['kw_'+code]=u}catch{return toast('Not enough storage for that photo.')}room.wp='custom';saveRoom();look(room);openRoom()});$('#rf').append(b);
- $('#ri').textContent=typeof room.d=='number'?'This room destroys itself on '+new Date(room.d).toLocaleString()+'.':room.d=='close'?'Destroyed when you close it. Nothing is saved.':'This room stays until someone deletes it.';
- $('#rt2').textContent=room.name;if(!$('#rs').open)$('#rs').showModal()}
-$('#gs').onclick=openSettings;$('#sx').onclick=()=>$('#st').close();$('#ro').onclick=openRoom;$('#rx').onclick=()=>$('#rs').close();$('#cc').onclick=()=>$('#cr').close();
-$('#kill').onclick=()=>{if(confirm('Destroy this room for everyone in it?')){bc({t:'kill'});setTimeout(()=>nuke('Room destroyed.'),400)}};
-$('#wipe').onclick=()=>{if(confirm('Delete all rooms, messages and settings on this device?')){localStorage.clear();sessionStorage.clear();location.reload()}};
-$('#cr').onclose=()=>{if($('#cr').returnValue=='ok')begin(makeCode(),{name:$('#rn').value.trim()||'New room',d:destroyAt($('#rd').value),made:1})};
-let ip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;$('#inst').hidden=false});addEventListener('appinstalled',()=>$('#inst').hidden=true);
-$('#inst').onclick=async()=>{ip.prompt();await ip.userChoice;ip=null;$('#inst').hidden=true};
-if(/iphone|ipad/i.test(navigator.userAgent)&&!navigator.standalone)$('#ih').textContent='To install on iPhone or iPad: tap Share, then Add to Home Screen.';
-matchMedia('(prefers-color-scheme:dark)').onchange=()=>look(room||{});navigator.serviceWorker?.register('sw.js');
-look({});drawHub();if(sessionStorage.kt){toast(sessionStorage.kt);delete sessionStorage.kt}if(new URLSearchParams(location.search).has('new'))$('#mk').click();
-</script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
 :root{--g:#f2b705;--g2:#ffe08a;--ink:#12202f;--pa:#fff9e8}
 *{box-sizing:border-box}html,body{height:100%;margin:0}[hidden]{display:none!important}
@@ -90,6 +60,9 @@ dialog h2{font:700 26px Fraunces,Georgia,serif;margin:0 0 8px}dialog input[type=
 .set{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #8883}.set select,.set input[type=text]{width:auto;max-width:55%;padding:8px;border-radius:10px;border:1px solid #8886;background:var(--bub);color:var(--ink);margin:0}
 .btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}button.g2{background:#8883;color:var(--ink)}.hint{font-size:13px;opacity:.7}
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#12202f;color:#ffe08a;padding:10px 16px;border-radius:14px;z-index:9;max-width:90vw}
+.m.sel{outline:3px solid var(--g)}.tomb{font-style:italic;opacity:.65}.meta{display:flex;gap:6px;justify-content:flex-end;align-items:center;font-size:11px;opacity:.75}
+.tk.rd{color:#2f8cff;opacity:1;font-weight:700}#selbar{display:flex;align-items:center;gap:4px;padding:6px 12px;background:var(--ink);color:var(--g2)}#selbar span{flex:1}#selbar button{color:var(--g2)}.rx{font-size:14px}.m img{cursor:zoom-in}dialog{overflow:auto}
+#recbar{display:flex;align-items:center;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid #12202f1a}.dot{width:12px;height:12px;border-radius:50%;background:#e5372a;animation:bl 1s infinite}@keyframes bl{50%{opacity:.2}}.m a{color:inherit;text-decoration:underline}.m audio{width:100%;min-width:220px}
 </style></head><body>
 <section id=home><div class=top><button id=inst hidden>Install</button><button id=gs aria-label=Settings>⚙</button></div><div class=card>
 <svg viewBox="0 0 64 40" aria-hidden=true><path d="M2 20C16 2 28 8 32 24 36 8 48 2 62 20 50 16 40 22 32 38 24 22 14 16 2 20Z" fill="#12202f"/></svg>
@@ -102,13 +75,16 @@ dialog h2{font:700 26px Fraunces,Georgia,serif;margin:0 0 8px}dialog input[type=
 <section id=room hidden>
 <header><button class=g id=bk aria-label=Leave>‹</button><div class=t><button id=code title="Copy invite link"></button><span id=sub></span></div>
 <select id=ex aria-label="Disappearing messages"><option value=0>Keep</option><option value=86400000>1 day</option><option value=604800000>7 days</option></select>
-<button class=g id=vc aria-label="Voice call">📞</button><button class=g id=vv aria-label="Video call">🎥</button><button class=g id=ro aria-label="Room settings">⚙</button></header>
-<div id=ring hidden><span id=rt></span><button id=j1>Join</button><button id=j2>Join with video</button></div>
+<button class=g id=vc aria-label="Voice call">📞</button><button class=g id=vv aria-label="Video call">🎥</button><button class=g id=sb aria-label=Search>🔍</button><button class=g id=ro aria-label="Room settings">⚙</button></header>
+<input id=sq type=text placeholder="Search this chat" hidden style="margin:6px 12px;padding:8px 12px;border-radius:20px;border:1px solid #8886;background:var(--bub);color:var(--ink)"><div id=selbar hidden><span id=sn></span><button class=g id=sc title=Copy>📋</button><button class=g id=ss title="Save to device">⬇</button><button class=g id=sd2 title=Delete>🗑</button><button class=g id=sx2 title=Cancel>✕</button></div><div id=ring hidden><span id=rt></span><button id=j1>Join</button><button id=j2>Join with video</button></div>
 <div id=msgs aria-live=polite></div><div id=rp hidden></div>
 <footer><label class=g style="cursor:pointer;padding:8px">📎<input id=fi type=file accept="image/*" hidden></label>
-<input id=tx type=text placeholder="Message" autocomplete=off aria-label=Message><button class=g id=mc aria-label="Hold to record">🎙</button><button id=sd aria-label=Send>➤</button></footer></section>
+<button class=g id=eb aria-label=Emoji>😊</button><input id=tx type=text placeholder="Message" autocomplete=off aria-label=Message><button class=g id=mc aria-label="Record voice note">🎙</button><button id=sd aria-label=Send>➤</button></footer><div id=recbar hidden><span class=dot></span><b id=rt3>0:00</b><span style="flex:1"></span><button class=g id=rc2 title=Cancel>🗑</button><button class=g id=rp2 title=Pause>⏸</button><button id=rs2 title=Send>➤</button></div></section>
 
-<div id=toast hidden></div>
+<dialog id=dl><h2>Delete message?</h2><div class=btns style="flex-direction:column"><button id=d2>Delete for everyone</button><button id=d1 class=g2>Delete for me</button><button id=d0 class=g2>Cancel</button></div></dialog>
+<dialog id=pv><form method=dialog><h2>Send photo</h2><img id=pvi alt="" style="width:100%;border-radius:12px"><input id=cap type=text placeholder="Add a caption" maxlength=500><label class=set><span>Others can save it</span><input id=cs type=checkbox checked></label><div class=btns><button type=button class=g2 id=pc>Cancel</button><button value=ok>Send</button></div></form></dialog>
+<dialog id=lb style="padding:10px;background:#000"><img alt="" style="max-width:100%;max-height:78vh;display:block;margin:auto"><div class=btns><button id=lbs class=g2>Save to device</button><button id=lbx>Close</button></div></dialog>
+<dialog id=em><div id=eg style="display:grid;grid-template-columns:repeat(8,1fr);gap:2px;font-size:26px;text-align:center"></div><div class=btns><button id=ex2 class=g2>Close</button></div></dialog><div id=toast hidden></div>
 <dialog id=cr><form method=dialog><h2>New room</h2><input id=rn type=text placeholder="Room name (optional)" maxlength=30>
 <label class=set><span>Destroy room</span><select id=rd><option value=never>Never</option><option value=1h>After 1 hour</option><option value=1d>After 24 hours</option><option value=7d>After 7 days</option><option value=close>When I close it</option></select></label>
 <p class=hint>Destroyed rooms wipe their messages from every device that is online.</p>
@@ -124,11 +100,11 @@ const $=s=>document.querySelector(s),el=(t,c,x)=>{const e=document.createElement
 const OK=/^data:(image|audio)\/[\w.+-]+(;codecs=[\w.]+)?;base64,[A-Za-z0-9+\/=]+$/;
 const uid=localStorage.ku||=crypto.randomUUID();
 let name=S.name,room,code,hostId,me,peer,host,msgs=[],reply=null,local=null,dirty=0,rec;
-const conns=new Map(),calls=new Map(),inCall=new Set(),pend=new Set();
+const conns=new Map(),calls=new Map(),inCall=new Set(),pend=new Set(),sel=new Set(),hid=new Set(),ak={dv:[],tm:0};const blobs=new Map(),urls=new Map(),inb=new Map(),srv=new Set(),typers=new Map();let editing=null,lbm=null,delIds=[],q='',lastTy=0,R=null;
 $('#nm').value=name;const h0=normCode(location.hash.slice(1));if(h0)$('#cd').value=h0;
 const claim=id=>new Promise((ok,no)=>{const p=id?new Peer(id):new Peer();p.on('open',()=>ok(p));p.on('error',no)});
 const bc=d=>conns.forEach(p=>p.c.open&&p.c.send(d)),persist=()=>S.save&&room.d!='close',
- save=()=>{if(!persist())return;const real=msgs.filter(m=>!m.s).slice(-200),k='k_'+code;try{localStorage[k]=JSON.stringify(real)}catch{localStorage[k]=JSON.stringify(real.map(m=>({...m,a:''})))}
+ save=()=>{if(!persist())return;const real=msgs.filter(m=>!m.s).slice(-200).map(m=>S.keep||!m.a?m:{...m,a:'',gone:1}),k='k_'+code;try{localStorage[k]=JSON.stringify(real)}catch{localStorage[k]=JSON.stringify(real.map(m=>({...m,a:''})))}
   const l=real[real.length-1];room.ts=Date.now();room.pv=l?(l.by+': '+(l.t||'📎')).slice(0,60):'';saveRoom()};
 const sys=t=>{addMsg(msgs,{id:crypto.randomUUID(),ts:Date.now(),s:1,t});draw()};
 const count=()=>$('#sub').textContent=(conns.size?`${conns.size+1} in this room`:'Only you here. Share the code.')+tail();
@@ -139,41 +115,55 @@ async function begin(raw,o={}){const c=normCode(raw);if(!c)return alert('Room co
  name=$('#nm').value.trim();if(!name){$('#nm').focus();return alert('Pick a name first.')}
  S.name=name;saveS();code=c;hostId='kestrel-'+c.toLowerCase();history.replaceState(null,'','#'+c);
  let l=rooms();room=l.find(r=>r.code==c);if(!room){room={code:c,name:o.name||c,d:o.d||'never',ts:Date.now(),j:o.made?0:1};l.push(room);putRooms(l)}
- if(expired(room))return nuke('That room expired and was destroyed.');look(room);$('#ex').value=S.ttl||0;msgs=persist()?J('k_'+c,[]):[];$('#home').hidden=true;$('#room').hidden=false;$('#code').textContent=c;$('#sub').textContent='Connecting…';draw();
+ if(expired(room))return nuke('That room expired and was destroyed.');look(room);$('#ex').value=S.ttl||0;msgs=persist()?J('k_'+c,[]):[];blobs.clear();urls.clear();inb.clear();hid.clear();sel.clear();if(persist()){J('kh_'+c,[]).forEach(i=>hid.add(i));msgs.filter(m=>m.v&&!m.del).forEach(async m=>{const b=await idbGet(c+'|'+m.id);if(b){blobs.set(m.id,b);draw()}})}$('#home').hidden=true;$('#room').hidden=false;$('#code').textContent=c;$('#sub').textContent='Connecting…';draw();
  try{peer=await claim(hostId);host=true}catch(e){if(e.type!='unavailable-id')return fail();try{peer=await claim();host=false}catch{return fail()}}
  me=peer.id;peer.on('connection',setup);peer.on('call',onCall);peer.on('disconnected',()=>peer.reconnect());
  peer.on('error',e=>{if(e.type=='peer-unavailable'&&String(e.message).includes(hostId)){peer.destroy();begin(c)}});
  if(host){sys('Room open. Share the code or tap it to copy an invite link.');count()}else link(hostId)}
-function link(id){if(id==me||conns.has(id)||pend.has(id))return;pend.add(id);setup(peer.connect(id,{serialization:'json'}))}
+function link(id){if(id==me||conns.has(id)||pend.has(id))return;pend.add(id);setup(peer.connect(id,{serialization:'json',reliable:true}))}
 function setup(c){
  c.on('open',()=>{pend.delete(c.peer);if(conns.has(c.peer))return c.close();conns.set(c.peer,{c,name:'Someone'});
   c.send({t:'hi',name,list:[...conns.keys()]});c.send({t:'cfg',name:room.name,d:room.d});c.send({t:'h',m:msgs.filter(m=>!m.s).slice(-50)});if(local)c.send({t:'cs',on:1});count()});
  c.on('data',d=>{const p=conns.get(c.peer);if(!p||!d)return;
   if(d.t=='hi'){p.name=String(d.name||'Someone').slice(0,24);sys(p.name+' joined');if(c.peer==hostId)(d.list||[]).forEach(link);count()}
-  else if(d.t=='h')(d.m||[]).forEach(got);else if(d.t=='m')got(d.m);else if(d.t=='rx')react(d.id,d.e,0);
+  else if(d.t=='h')(d.m||[]).forEach(x=>got(x,c));else if(d.t=='m')got(d.m,c);else if(d.t=='rx')react(d.id,d.e,0);
+  else if(d.t=='vq')serve(String(d.id),c);else if(d.t=='vc')chunk(d);else if(d.t=='ty'){typers.set(c.peer,1);$('#sub').textContent=p.name+' is typing…';setTimeout(count,3600)}
+  else if(d.t=='ack'){const k=d.k=='rd'?'rd':'dv',u=String(d.u||'').slice(0,50);(Array.isArray(d.ids)?d.ids.slice(0,200):[]).forEach(id=>{const m=msgs.find(x=>x.id==id);if(m&&u&&u!=m.u){const l=m[k]||(m[k]=[]);if(!l.includes(u))l.push(u)}});save();draw()}
+  else if(d.t=='del'){const m=msgs.find(x=>x.id==d.id);if(m&&m.u==String(d.u))tomb(m);save();draw()}
+  else if(d.t=='ed'){const m=msgs.find(x=>x.id==d.id);if(m&&m.u==String(d.u)&&!m.del){m.t=String(d.txt).slice(0,4000);m.ed=+d.ed||Date.now();save();draw()}}
   else if(d.t=='cfg'){if(room.j){room.j=0;if(d.name)room.name=String(d.name).slice(0,30);if(d.d=='close'||d.d=='never')room.d=d.d;else if(+d.d)room.d=+d.d;saveRoom();look(room);count()}}else if(d.t=='kill')nuke('This room was destroyed by a member.');else if(d.t=='cs'){d.on?inCall.add(c.peer):inCall.delete(c.peer);ring();if(d.on)maybeCall(c.peer)}});
  c.on('close',()=>{pend.delete(c.peer);const p=conns.get(c.peer);if(p&&p.c==c){conns.delete(c.peer);inCall.delete(c.peer);sys(p.name+' left');count();ring()}})}
-function got(m){if(!m||!m.id||typeof m.by!='string')return;
- const s={id:String(m.id).slice(0,50),u:String(m.u||'').slice(0,50),by:m.by.slice(0,24),ts:+m.ts||Date.now(),t:String(m.t||'').slice(0,4000),a:OK.test(m.a)?m.a:'',re:String(m.re||''),x:+m.x||0,r:Array.isArray(m.r)?m.r.slice(0,50).map(String):[]};
- if(addMsg(msgs,s)){save();draw();if(!room.mute){if(document.hidden){document.title='● Kestrel';if(S.notif&&Notification.permission=='granted')new Notification(room.name,{body:'New message'})}if(S.sound)beep()}}}
-function post(o){const ttl=+$('#ex').value,m={id:crypto.randomUUID(),u:uid,by:name,ts:Date.now(),t:'',a:'',re:reply?reply.id:'',x:ttl?Date.now()+ttl:0,r:[],...o};
+function got(m,c){if(!m||!m.id||typeof m.by!='string')return;const id=String(m.id).slice(0,50),ou=String(m.u||'').slice(0,50),ex=msgs.find(x=>x.id==id);
+ if(ex){if(ex.u==ou){if(m.del&&!ex.del){tomb(ex);save();draw()}else if(+m.ed>(ex.ed||0)&&!ex.del){ex.t=String(m.t||'').slice(0,4000);ex.ed=+m.ed;save();draw()}}return}
+ const L=a=>Array.isArray(a)?a.slice(0,20).map(String):[];
+ const s={id,u:ou,by:m.by.slice(0,24),ts:+m.ts||Date.now(),t:m.del?'':String(m.t||'').slice(0,4000),a:!m.del&&OK.test(m.a)?m.a:'',re:String(m.re||''),x:+m.x||0,r:L(m.r),dv:L(m.dv),rd:L(m.rd),ed:+m.ed||0,del:m.del?1:0,ns:m.ns?1:0,v:!m.del&&m.v&&+m.v.s>0&&+m.v.s<1e8?{d:+m.v.d||0,s:+m.v.s,h:String(m.v.h||'').slice(0,16)}:null};
+ if(addMsg(msgs,s)){save();draw();if(s.v&&c)want(id,c);if(s.u!=uid){ak.dv.push(id);clearTimeout(ak.tm);ak.tm=setTimeout(()=>bc({t:'ack',k:'dv',ids:ak.dv.splice(0),u:uid}),80);
+  if(!room.mute){if(document.hidden){document.title='● Kestrel';if(S.notif&&Notification.permission=='granted')new Notification(room.name,{body:'New message'})}if(S.sound)beep()}}}}
+function post(o){const ttl=+$('#ex').value,m={id:crypto.randomUUID(),u:uid,by:name,ts:Date.now(),t:'',a:'',re:reply?reply.id:'',x:ttl?Date.now()+ttl:0,r:[],dv:[],rd:[],ed:0,del:0,ns:0,v:null,...o};
  reply=null;$('#rp').hidden=true;addMsg(msgs,m);save();draw();bc({t:'m',m})}
 function react(id,e,mine){const m=msgs.find(x=>x.id==id);if(m&&m.r.length<50){m.r.push(String(e));save();draw()}if(mine)bc({t:'rx',id,e})}
 const playing=()=>[...document.querySelectorAll('audio')].some(a=>!a.paused);
-function draw(){if(playing()){dirty=1;return}const now=Date.now(),box=$('#msgs'),by=new Map(msgs.map(m=>[m.id,m]));
- box.replaceChildren(...msgs.filter(m=>!m.x||m.x>now).map(m=>{if(m.s)return el('div','sys',m.t);
-  const d=el('div','m'+(m.u==uid?' me':''));if(m.u!=uid)d.append(el('div','by',m.by));
-  const q=by.get(m.re);if(q)d.append(el('div','q',q.t?q.t.slice(0,70):'Attachment'));
-  if(m.t)d.append(el('div','',m.t));
-  if(m.a){const a=m.a.startsWith('data:image')?el('img'):el('audio');a.src=m.a;if(a.tagName=='AUDIO')a.controls=true;d.append(a)}
-  if(m.r.length)d.append(el('div','',m.r.join(' ')));
-  if(S.time)d.append(el('time','',new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})));
-  const bar=el('div','acts');bar.hidden=true;
-  [['↩',()=>{reply=m;$('#rp').hidden=false;$('#rp').textContent='Replying to '+m.by+'  ✕'}],...['👍','❤️','😂'].map(e=>[e,()=>react(m.id,e,1)])]
-   .forEach(([t,f])=>{const b=el('button','g',t);b.onclick=ev=>{ev.stopPropagation();f();bar.hidden=true};bar.append(b)});
-  d.append(bar);d.onclick=()=>bar.hidden=!bar.hidden;return d}));box.scrollTop=box.scrollHeight}
+function draw(){if(playing()){dirty=1;return}const now=Date.now(),box=$('#msgs'),by=new Map(msgs.map(m=>[m.id,m])),unread=[],low=box.scrollHeight-box.scrollTop-box.clientHeight<90,top=box.scrollTop;
+ box.replaceChildren(...msgs.filter(m=>(!m.x||m.x>now)&&!hid.has(m.id)&&(!q||(!m.s&&(m.t||'').toLowerCase().includes(q)))).flatMap((m,i,arr)=>{const ds=i==0||new Date(arr[i-1].ts).toDateString()!=new Date(m.ts).toDateString()?[el('div','sys',dayLabel(m.ts))]:[];if(m.s)return [...ds,el('div','sys',m.t)];
+  const mine=m.u==uid,d=el('div','m'+(mine?' me':'')+(sel.has(m.id)?' sel':''));
+  if(!mine){d.append(el('div','by',m.by));if(!m.mr&&!m.del)unread.push(m)}
+  const q=by.get(m.re);if(q)d.append(el('div','q',q.del?'Deleted message':q.t?q.t.slice(0,70):'Photo'));
+  if(m.del)d.append(el('div','tomb','🚫 This message was deleted'));
+  else{if(m.gone)d.append(el('div','tomb','📷 Media not kept on this device'));if(m.t)d.append(rich(m.t));if(m.v)voice(m,d);
+   if(m.a){const a=m.a.startsWith('data:image')?el('img'):el('audio');a.src=m.a;if(a.tagName=='AUDIO')a.controls=true;else a.onclick=ev=>{if(sel.size)return;ev.stopPropagation();lbm=m;$('#lb img').src=m.a;$('#lbs').hidden=!canSave(m);$('#lb').showModal()};d.append(a)}}
+  const cnt={};m.r.forEach(e=>cnt[e]=(cnt[e]||0)+1);const rx=Object.entries(cnt);if(rx.length)d.append(el('div','rx',rx.map(([e,n])=>e+(n>1?' '+n:'')).join('  ')));
+  const f=el('div','meta');if(m.ed&&!m.del)f.append(el('time','','edited'));if(S.time)f.append(el('time','',new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})));
+  if(mine&&!m.del){const r=m.rd&&m.rd.length,v=m.dv&&m.dv.length,k=el('span','tk'+(r?' rd':''),r||v?'✓✓':conns.size?'✓':'🕓');k.title=r?'Read':v?'Delivered':'Sent';f.append(k)}d.append(f);
+  const bar=el('div','acts'),A=[['☑','Select',()=>toggleSel(m.id)]];bar.hidden=true;
+  if(!m.del){A.unshift(['↩','Reply',()=>{reply=m;editing=null;$('#rp').hidden=false;$('#rp').textContent='Replying to '+m.by+'  ✕'}],...['👍','❤️','😂'].map(e=>[e,'React',()=>react(m.id,e,1)]));
+   if(mine&&m.t)A.push(['✏️','Edit',()=>{editing=m;reply=null;$('#tx').value=m.t;$('#tx').focus();$('#rp').hidden=false;$('#rp').textContent='Editing message  ✕'}]);if(canSave(m))A.push(['⬇','Save to device',()=>dl(m)])}
+  A.push(['🗑','Delete',()=>ask([m.id])]);
+  A.forEach(([t,n,fn])=>{const b=el('button','g',t);b.title=n;b.setAttribute('aria-label',n);b.onclick=ev=>{ev.stopPropagation();fn();bar.hidden=true};bar.append(b)});
+  d.append(bar);d.onclick=()=>sel.size?toggleSel(m.id):bar.hidden=!bar.hidden;return [...ds,d]}));
+ box.scrollTop=low?box.scrollHeight:top;
+ if(S.receipts&&!document.hidden&&unread.length){unread.forEach(m=>m.mr=1);bc({t:'ack',k:'rd',ids:unread.map(m=>m.id),u:uid});save()}}
 document.addEventListener('pause',()=>{if(dirty&&!playing()){dirty=0;draw()}},true);document.addEventListener('ended',()=>{dirty=0;draw()},true);
-setInterval(()=>{if(code){if(expired(room))return nuke('This room expired and was destroyed.');count();draw()}},30000);addEventListener('focus',()=>document.title='Kestrel');
+setInterval(()=>{if(code){if(expired(room))return nuke('This room expired and was destroyed.');count();draw()}},30000);addEventListener('focus',()=>{document.title='Kestrel';draw()});addEventListener('visibilitychange',draw);
 
 // Calls: full mesh, the higher peer id always dials, so pairs never double-connect.
 function tile(id,s,self){untile(id);const t=el('div','tile');t.id='t-'+id;const v=el('video');v.srcObject=s;v.autoplay=true;v.playsInline=true;v.muted=!!self;
@@ -193,19 +183,99 @@ const rd=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.
 async function shrink(f,mx=800,lim=250000){const im=await createImageBitmap(f),sc=Math.min(1,mx/Math.max(im.width,im.height)),c=document.createElement('canvas');
  c.width=im.width*sc;c.height=im.height*sc;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
  for(let q=.8;q>.2;q-=.1){const u=c.toDataURL('image/jpeg',q);if(u.length<lim)return u}alert('That image is too large to send.')}
-async function mic(on){if(on){let s;try{s=await navigator.mediaDevices.getUserMedia({audio:true})}catch{return alert('Allow microphone access to record.')}
- const ch=[];rec=new MediaRecorder(s,{audioBitsPerSecond:24000});rec.ondataavailable=e=>ch.push(e.data);
- rec.onstop=async()=>{s.getTracks().forEach(t=>t.stop());const u=await rd(new Blob(ch,{type:rec.mimeType}));u.length<400000?post({a:u}):alert('Voice note too long (60 s max).')};
- rec.start();setTimeout(()=>rec.state=='recording'&&rec.stop(),60000)}else if(rec?.state=='recording')rec.stop()}
-
+// Voice notes: recorded straight to 16 kHz mono WAV, so they play on every device, seek properly and have the right length. No time limit.
+const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'),url=id=>urls.get(id)||(urls.set(id,URL.createObjectURL(blobs.get(id))),urls.get(id));
+const WK="class P extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(2048);this.n=0}process(i){const c=i[0][0];if(c)for(let k=0;k<c.length;k++){this.b[this.n++]=c[k];if(this.n==2048){this.port.postMessage(this.b.slice());this.n=0}}return true}}registerProcessor('kp',P)";
+async function recStart(){if(R)return;let st;try{st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}})}catch{return toast('Allow microphone access to record')}
+ try{const ctx=new AudioContext();await ctx.resume();await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WK],{type:'text/javascript'})));
+  const src=ctx.createMediaStreamSource(st),node=new AudioWorkletNode(ctx,'kp'),z=ctx.createGain(),r=ctx.sampleRate/16000;z.gain.value=0;src.connect(node);node.connect(z);z.connect(ctx.destination);
+  R={st,ctx,ch:[],n:0,paused:0,acc:0,c:0,p:0};
+  node.port.onmessage=e=>{if(!R||R.paused)return;const o=[];for(const x of e.data){R.acc+=x;R.c++;R.p++;if(R.p>=r){o.push(Math.max(-1,Math.min(1,R.acc/R.c))*32767);R.acc=0;R.c=0;R.p-=r}}R.ch.push(Int16Array.from(o));R.n+=o.length};
+  $('#recbar').hidden=false;$('footer').hidden=true;$('#rp2').textContent='⏸';R.tm=setInterval(()=>$('#rt3').textContent=fmt(R.n/16000),200)}
+ catch{st.getTracks().forEach(t=>t.stop());R=null;toast('Voice notes need a newer browser')}}
+function wav(ch,n){const buf=new ArrayBuffer(44+n*2),v=new DataView(buf),w=(o,t)=>[...t].forEach((c,i)=>v.setUint8(o+i,c.charCodeAt(0)));w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,16000,true);v.setUint32(28,32000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+ const pcm=new Int16Array(buf,44,n);let o=0;for(const c of ch){pcm.set(c,o);o+=c.length}return new Blob([buf],{type:'audio/wav'})}
+async function fnv(b){const u=new Uint8Array(await b.arrayBuffer());let h=2166136261;for(let i=0;i<u.length;i++)h=Math.imul(h^u[i],16777619);return(h>>>0).toString(16)}
+async function recEnd(send){if(!R)return;const r=R;R=null;clearInterval(r.tm);r.st.getTracks().forEach(t=>t.stop());r.ctx.close();$('#recbar').hidden=true;$('footer').hidden=false;
+ if(!send)return;if(r.n<8000)return toast('Too short');const b=wav(r.ch,r.n),id=crypto.randomUUID();blobs.set(id,b);if(persist()&&S.keep)idbPut(code+'|'+id,b);post({id,v:{d:Math.round(r.n/16000),s:b.size,h:await fnv(b)}})}
+function voice(m,d){const b=blobs.get(m.id);d.append(el('div','',`🎙 Voice note · ${fmt(m.v.d)}`));
+ if(b){const a=el('audio');a.controls=true;a.preload='metadata';a.src=url(m.id);a.onplay=()=>a.playbackRate=m.sp||1;const sp=el('button','g',(m.sp||1)+'×');sp.title='Playback speed';sp.onclick=ev=>{ev.stopPropagation();m.sp=m.sp==1.5?2:m.sp==2?1:1.5;sp.textContent=m.sp+'×';a.playbackRate=m.sp};d.append(a,sp)}
+ else{const r=inb.get(m.id),bt=el('button','g2',r&&r.g?`Receiving… ${Math.round(100*r.g/r.n)}%`:r?'Requesting…':`⬇ Load voice note`);bt.onclick=ev=>{ev.stopPropagation();wantAny(m.id)};d.append(bt)}}
+// Media transfer: metadata travels in the message, the audio follows in checked chunks (size + hash) and is re-requested if damaged.
+function want(id,c){if(blobs.has(id)||inb.has(id)||!c||!c.open)return;inb.set(id,{n:1,p:[],g:0});c.send({t:'vq',id});setTimeout(()=>{const r=inb.get(id);if(r&&!r.g){inb.delete(id);draw()}},20000)}
+const wantAny=id=>{inb.delete(id);const p=[...conns.values()].find(x=>x.c.open);p?want(id,p.c):toast('No one is online to load it from');draw()};
+async function serve(id,c){const k=c.peer+id,m=msgs.find(x=>x.id==id);if(!m||!m.v||m.del||srv.has(k))return;srv.add(k);try{const b=blobs.get(id)||await idbGet(code+'|'+id);if(!b)return;blobs.set(id,b);
+ const u=new Uint8Array(await b.arrayBuffer()),N=Math.ceil(u.length/49152);
+ for(let i=0;i<N&&c.open;i++){let t='';const q2=u.subarray(i*49152,(i+1)*49152);for(let k2=0;k2<q2.length;k2+=8192)t+=String.fromCharCode.apply(null,q2.subarray(k2,k2+8192));c.send({t:'vc',id,i,n:N,d:btoa(t)});if(i%12==11)await new Promise(r=>setTimeout(r,25))}}finally{srv.delete(k)}}
+async function chunk(d){const id=String(d.id).slice(0,50);if(blobs.has(id))return;let r=inb.get(id);if(!r||!r.g&&r.n!=+d.n)inb.set(id,r={n:+d.n,p:[],g:0});
+ if(!(d.i>=0&&d.i<r.n)||r.p[d.i]||typeof d.d!='string')return;r.p[d.i]=Uint8Array.from(atob(d.d),c=>c.charCodeAt(0));r.g++;if(r.g%10==0)draw();if(r.g<r.n)return;
+ inb.delete(id);const b=new Blob(r.p,{type:'audio/wav'}),m=msgs.find(x=>x.id==id);
+ if(!m||!m.v||b.size!=m.v.s||await fnv(b)!=m.v.h){draw();return toast('A voice note arrived damaged. Tap it to load again.')}
+ blobs.set(id,b);if(persist()&&S.keep)idbPut(code+'|'+id,b);draw()}
+const idb=new Promise(ok=>{const r=indexedDB.open('kestrel',1);r.onupgradeneeded=()=>r.result.createObjectStore('m');r.onsuccess=()=>ok(r.result);r.onerror=()=>ok(null)});
+const tx=async(mode,f)=>{const d=await idb;if(!d)return;return new Promise(ok=>{const r=f(d.transaction('m',mode).objectStore('m'));r.onsuccess=()=>ok(r.result);r.onerror=()=>ok()})};
+const idbGet=k=>tx('readonly',s=>s.get(k)),idbPut=(k,b)=>tx('readwrite',s=>s.put(b,k)),idbDel=k=>tx('readwrite',s=>s.delete(k)),idbWipe=c=>tx('readwrite',s=>s.delete(IDBKeyRange.bound(c+'|',c+'|\uffff')));
+const rich=t=>{const e=el('div');t.split(/(https?:\/\/[^\s<]+)/g).forEach((x,i)=>{if(i%2){const a=el('a','',x);a.href=x;a.target='_blank';a.rel='noopener noreferrer';e.append(a)}else e.append(document.createTextNode(x))});return e};
+const dayLabel=t=>{const d=new Date(t).toDateString(),n=new Date();return d==n.toDateString()?'Today':d==new Date(n-864e5).toDateString()?'Yesterday':new Date(t).toLocaleDateString([],{day:'numeric',month:'short',year:'numeric'})};
 // Wiring
-$('#mk').onclick=()=>{$('#rn').value='';$('#cr').returnValue='';$('#cr').showModal()};$('#en').onclick=()=>begin($('#cd').value);$('#cd').onkeydown=e=>e.key=='Enter'&&begin($('#cd').value);
-$('#sd').onclick=()=>{const t=$('#tx').value.trim();if(t){$('#tx').value='';post({t})}};$('#tx').onkeydown=e=>e.key=='Enter'&&S.enter&&$('#sd').click();
-$('#fi').onchange=async e=>{const u=e.target.files[0]&&await shrink(e.target.files[0]);if(u)post({a:u});e.target.value=''};
-$('#mc').onpointerdown=()=>mic(1);$('#mc').onpointerup=$('#mc').onpointerleave=()=>mic(0);
-$('#rp').onclick=()=>{reply=null;$('#rp').hidden=true};
+$('#mk').onclick=()=>{if(!$('#nm').value.trim()){$('#nm').focus();return toast('Enter your name first')};$('#rn').value='';$('#cr').returnValue='';$('#cr').showModal()};$('#en').onclick=()=>begin($('#cd').value);$('#cd').onkeydown=e=>e.key=='Enter'&&begin($('#cd').value);
+$('#sd').onclick=()=>{const t=$('#tx').value.trim();if(!t)return;$('#tx').value='';if(editing){const m=editing;editing=null;$('#rp').hidden=true;if(t!=m.t){m.t=t.slice(0,4000);m.ed=Date.now();bc({t:'ed',id:m.id,u:uid,txt:m.t,ed:m.ed});save();draw()}}else post({t})};$('#tx').onkeydown=e=>e.key=='Enter'&&S.enter&&$('#sd').click();
+let pvImg='';$('#fi').onchange=async e=>{const u=e.target.files[0]&&await shrink(e.target.files[0]);e.target.value='';if(!u)return;pvImg=u;$('#pvi').src=u;$('#cap').value='';$('#pv').returnValue='';$('#pv').showModal()};
+$('#pv').onclose=()=>{if($('#pv').returnValue=='ok')post({a:pvImg,t:$('#cap').value.trim().slice(0,500),ns:$('#cs').checked?0:1});pvImg=''};
+
+$('#rp').onclick=()=>{if(editing)$('#tx').value='';reply=editing=null;$('#rp').hidden=true};
 $('#code').onclick=()=>{navigator.clipboard?.writeText(location.origin+location.pathname+'#'+code);$('#sub').textContent='Invite link copied';setTimeout(count,1500)};
 $('#vc').onclick=()=>joinCall(false);$('#vv').onclick=()=>joinCall(true);$('#j1').onclick=()=>joinCall(false);$('#j2').onclick=()=>joinCall(true);
 $('#mic').onclick=()=>flip('getAudioTracks','#mic');$('#cam').onclick=()=>flip('getVideoTracks','#cam');$('#end').onclick=leaveCall;
 $('#bk').onclick=()=>{history.replaceState(null,'',location.pathname);location.reload()};
+
+// Rooms hub, settings, destroy, install
+const wipe=c=>{localStorage.removeItem('k_'+c);localStorage.removeItem('kw_'+c);localStorage.removeItem('kh_'+c);idbWipe(c)},saveRoom=()=>putRooms(rooms().map(r=>r.code==code?room:r));
+const toast=t=>{const e=$('#toast');e.textContent=t;e.hidden=false;setTimeout(()=>e.hidden=true,4500)};
+const beep=()=>{try{const a=new AudioContext(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=880;g.gain.value=.05;o.start();o.stop(a.currentTime+.09)}catch{}};
+const OPT=o=>Object.keys(o).map(k=>[k,k[0].toUpperCase()+k.slice(1)]);
+const pick=cb=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async()=>{const u=i.files[0]&&await shrink(i.files[0],1200,450000);if(u)cb(u)};i.click()};
+function nuke(msg){wipe(code);putRooms(rooms().filter(r=>r.code!=code));sessionStorage.kt=msg;location.reload()}
+function prune(){const l=rooms(),dead=l.filter(r=>expired(r)||r.d=='close');dead.forEach(r=>wipe(r.code));if(dead.length)putRooms(l.filter(r=>!dead.includes(r)))}
+function drawHub(){prune();const l=rooms().sort((a,b)=>b.ts-a.ts);
+ $('#rl').replaceChildren(...(l.length?[el('h3','','Your rooms'),...l.map(r=>{const b=el('div','rm'),t=el('span');b.tabIndex=0;b.setAttribute('role','button');
+  t.append(el('b','',r.name||r.code),el('span','pv',(r.pv||r.code)+(typeof r.d=='number'?' · ⏳ '+left(r.d-Date.now()):'')));
+  const x=el('button','g x','✕');x.title='Delete from this device';x.onclick=e=>{e.stopPropagation();if(confirm('Delete this room from this device?')){wipe(r.code);putRooms(rooms().filter(y=>y.code!=r.code));drawHub()}};
+  b.onclick=()=>begin(r.code);b.onkeydown=e=>e.key=='Enter'&&b.click();b.append(t,x);return b})]:[]))}
+const defsG=[['name','Display name','text'],['theme','Theme','select',[['auto','Match device'],['day','Light'],['night','Night']]],['accent','Accent colour','select',OPT(AC)],['wp','Chat wallpaper','select',[...OPT(WP),['custom','My photo']]],['dim','Dim wallpaper','range'],['font','Text size','select',[[.9,'Small'],[1,'Normal'],[1.12,'Large'],[1.25,'Huge']]],['bub','Bubble shape','select',[['round','Rounded'],['square','Square']]],['enter','Enter key sends','toggle'],['time','Show message times','toggle'],['sound','Message sound','toggle'],['notif','Notifications when hidden','toggle'],['save','Save chat history on this device','toggle'],['keep','Keep photos and voice notes in app history','toggle'],['receipts','Send read receipts','toggle'],['ttl','New messages disappear','select',[[0,'Never'],[86400000,'After 1 day'],[604800000,'After 7 days']]]];
+function openSettings(){build($('#sf'),defsG,S,k=>{saveS();look(room||{});if(k=='notif'&&S.notif)Notification.requestPermission();if(k=='name')$('#nm').value=S.name});
+ const b=el('button','g2','Use my own photo as wallpaper');b.onclick=()=>pick(u=>{try{localStorage.kw=u}catch{return toast('Not enough storage for that photo.')}S.wp='custom';saveS();look(room||{});openSettings()});$('#sf').append(b);if(!$('#st').open)$('#st').showModal()}
+function openRoom(){build($('#rf'),[['name','Room name','text'],['accent','Room accent','select',[['','Same as app'],...OPT(AC)]],['wp','Room wallpaper','select',[['','Same as app'],...OPT(WP),['custom','My photo']]],['mute','Mute alerts','toggle']],room,()=>{saveRoom();look(room);$('#rt2').textContent=room.name});
+ const xb=el('button','g2','Export chat as text');xb.onclick=()=>{const t=msgs.filter(m=>!m.s&&!m.del).map(m=>`[${new Date(m.ts).toLocaleString()}] ${m.by}: ${m.t||(m.v?'[voice note]':'[photo]')}`).join('\n'),a=el('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));a.download=room.name+'.txt';a.click()};
+ const b=el('button','g2','Use my own photo in this room');b.onclick=()=>pick(u=>{try{localStorage['kw_'+code]=u}catch{return toast('Not enough storage for that photo.')}room.wp='custom';saveRoom();look(room);openRoom()});$('#rf').append(b,xb);
+ $('#ri').textContent=typeof room.d=='number'?'This room destroys itself on '+new Date(room.d).toLocaleString()+'.':room.d=='close'?'Destroyed when you close it. Nothing is saved.':'This room stays until someone deletes it.';
+ $('#rt2').textContent=room.name;if(!$('#rs').open)$('#rs').showModal()}
+$('#gs').onclick=openSettings;$('#sx').onclick=()=>$('#st').close();$('#ro').onclick=openRoom;$('#rx').onclick=()=>$('#rs').close();$('#cc').onclick=()=>$('#cr').close();
+$('#kill').onclick=()=>{if(confirm('Destroy this room for everyone in it?')){bc({t:'kill'});setTimeout(()=>nuke('Room destroyed.'),400)}};
+$('#wipe').onclick=()=>{if(confirm('Delete all rooms, messages and settings on this device?')){localStorage.clear();sessionStorage.clear();indexedDB.deleteDatabase('kestrel');location.reload()}};
+$('#cr').onclose=()=>{if($('#cr').returnValue=='ok')begin(makeCode(),{name:$('#rn').value.trim()||'New room',d:destroyAt($('#rd').value),made:1})};
+let ip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;$('#inst').hidden=false});addEventListener('appinstalled',()=>$('#inst').hidden=true);
+$('#inst').onclick=async()=>{ip.prompt();await ip.userChoice;ip=null;$('#inst').hidden=true};
+if(/iphone|ipad/i.test(navigator.userAgent)&&!navigator.standalone)$('#ih').textContent='To install on iPhone or iPad: tap Share, then Add to Home Screen.';
+matchMedia('(prefers-color-scheme:dark)').onchange=()=>look(room||{});navigator.serviceWorker?.register('sw.js');
+
+// Selecting, deleting, saving
+const selbar=()=>{$('#selbar').hidden=!sel.size;$('#sn').textContent=sel.size+' selected'};
+function toggleSel(id){sel.has(id)?sel.delete(id):sel.add(id);selbar();draw()}
+const tomb=m=>{m.t='';m.a='';m.v=null;m.del=1;m.r=[];blobs.delete(m.id);idbDel(code+'|'+m.id)},canSave=m=>(m.a||m.v)&&(m.u==uid||!m.ns),saveHid=()=>persist()&&(localStorage['kh_'+code]=JSON.stringify([...hid]));
+const dl=m=>{const h=m.v?blobs.has(m.id)&&url(m.id):m.a;if(!h)return toast('Load it first');const a=document.createElement('a');a.href=h;a.download='kestrel-'+m.id.slice(0,6)+'.'+(m.v?'wav':(m.a.match(/^data:\w+\/([\w.+-]+)/)||[])[1]||'bin');a.click()};
+function ask(ids){if(!ids.length)return;delIds=ids;$('#d2').hidden=!ids.every(id=>{const m=msgs.find(x=>x.id==id);return m&&m.u==uid&&!m.del});$('#dl').showModal()}
+function doDelete(all){delIds.forEach(id=>{const m=msgs.find(x=>x.id==id);if(!m)return;if(all&&m.u==uid){tomb(m);bc({t:'del',id,u:uid})}else hid.add(id)});sel.clear();selbar();saveHid();save();draw()}
+$('#d1').onclick=()=>{doDelete(0);$('#dl').close()};$('#d2').onclick=()=>{doDelete(1);$('#dl').close()};$('#d0').onclick=()=>$('#dl').close();
+$('#sd2').onclick=()=>ask([...sel]);$('#sx2').onclick=()=>{sel.clear();selbar();draw()};
+$('#sc').onclick=()=>{navigator.clipboard?.writeText(msgs.filter(m=>sel.has(m.id)&&m.t&&!m.del).map(m=>m.by+': '+m.t).join('\n'));toast('Copied');sel.clear();selbar();draw()};
+$('#ss').onclick=()=>{const l=msgs.filter(m=>sel.has(m.id)&&canSave(m));l.forEach(dl);toast(l.length?'Saved '+l.length+' file(s) to your device':'Nothing to save');sel.clear();selbar();draw()};
+$('#pc').onclick=()=>$('#pv').close();$('#lbx').onclick=()=>$('#lb').close();$('#lbs').onclick=()=>lbm&&dl(lbm);
+$('#mc').onclick=recStart;$('#rs2').onclick=()=>recEnd(1);$('#rc2').onclick=()=>recEnd(0);$('#rp2').onclick=()=>{if(R){R.paused=!R.paused;$('#rp2').textContent=R.paused?'▶':'⏸';$('#rp2').title=R.paused?'Resume':'Pause'}};
+$('#sb').onclick=()=>{const o=$('#sq');o.hidden=!o.hidden;if(o.hidden){o.value='';q='';draw()}else o.focus()};$('#sq').oninput=e=>{q=e.target.value.trim().toLowerCase();draw()};
+$('#tx').oninput=()=>{const n=Date.now();if(n-lastTy>2000){lastTy=n;bc({t:'ty'})}};
+const EM=[...new Intl.Segmenter().segment('😀😂🥹😍😘😎🤔😢😡👍👎🙏👏🔥🎉❤️💛🧡💚💙💜🤝👋🙌💪✨🌟🌈☀️🌙🐦🦅🍕☕🎵📷✅❌⚡💬👀🤩🥳😴🤗😅😇')].map(x=>x.segment);
+$('#eg').replaceChildren(...EM.map(e=>{const b=el('button','g',e);b.onclick=()=>{$('#tx').value+=e;$('#em').close();$('#tx').focus()};return b}));
+$('#eb').onclick=()=>$('#em').showModal();$('#ex2').onclick=()=>$('#em').close();
+look({});drawHub();if(sessionStorage.kt){toast(sessionStorage.kt);delete sessionStorage.kt}if(new URLSearchParams(location.search).has('new'))$('#mk').click();
 </script></body></html>

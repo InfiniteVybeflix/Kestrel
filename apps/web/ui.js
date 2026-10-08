@@ -2,7 +2,7 @@
 const $ = s => document.querySelector(s);
 const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
 export const J = (k, d) => { try { return JSON.parse(localStorage[k]) ?? d; } catch { return d; } };
-export const S = { name: '', theme: 'auto', accent: 'gold', wp: 'dots', dim: 0, font: 1, bub: 'round', enter: 1, time: 1, sound: 1, notif: 0, save: 1, ttl: 0, ...J('ks', {}) };
+export const S = { name: '', theme: 'auto', accent: 'gold', wp: 'dots', dim: 0, font: 1, bub: 'round', enter: 1, time: 1, sound: 1, notif: 0, save: 1, keep: 1, receipts: 1, ttl: 0, ...J('ks', {}) };
 export const saveS = () => localStorage.ks = JSON.stringify(S);
 export const rooms = () => J('kr', []);
 export const putRooms = l => localStorage.kr = JSON.stringify(l);

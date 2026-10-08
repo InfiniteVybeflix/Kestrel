@@ -10,6 +10,12 @@ Pick a name, **Create a room** (or enter a friend's code). Your rooms are listed
 - **Per room:** its own name, accent, wallpaper and mute.
 - **Install:** use the Install button (Android, desktop) or Share → Add to Home Screen (iPhone/iPad). It then opens full screen and loads offline.
 
+## Chat features
+Replies, reactions, edit, delete for me / for everyone, multi-select (copy, save, delete), photos with captions and a choice of whether others can save them, voice notes of any length, delivered and read receipts (✓ ✓✓ blue), typing indicator, in-chat search, emoji picker, clickable links, date dividers, export chat as text.
+
+- **Voice notes:** recorded directly to 16 kHz mono WAV, so they play on every device, seek correctly and show the right length. They travel in checked chunks (size and hash verified) and are re-requested if damaged.
+- **Media storage:** Settings → *Keep photos and voice notes in app history*. Off means media lives only for the session. Any message's media can also be saved to the device.
+
 ## How it works
 - **Hosting:** `deploy-web.yml` tests and publishes `apps/web` to GitHub Pages.
 - **Messages and calls:** browsers connect directly (WebRTC, encrypted by DTLS). The free public PeerJS cloud introduces browsers to each other and Google's public STUN helps them find a route. Neither sees your messages.
@@ -24,4 +30,4 @@ Push to `main`, set Settings → Pages → Source to **GitHub Actions**, share t
 - Strict networks can block direct connections; calls may fail there. Mesh calls suit about 4 people.
 - Anyone with the code can join, so share it privately.
 
-Tests: `node --test tests/`
+Tests: `node --test`
