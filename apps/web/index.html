@@ -1,0 +1,80 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Kestrel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9'><text y='8' font-size='8'>🦅</text></svg>">
+<style>
+:root{--bg:#eef2f5;--pn:#fff;--tx:#101820;--mu:#5d6e7e;--ac:#f0c230;--me:#d6e3ee;--bd:#d3dde6}
+@media(prefers-color-scheme:dark){:root{--bg:#0c131a;--pn:#16212b;--tx:#e8eef3;--mu:#8fa3b5;--me:#27425a;--bd:#243341}}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{display:flex;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+button,select,input{font:inherit;color:inherit}button{background:var(--ac);color:#101820;border:0;border-radius:8px;padding:6px 10px;cursor:pointer}
+button.g{background:none;color:var(--mu);padding:2px 6px}button:focus-visible,input:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+aside,main{display:flex;flex-direction:column;background:var(--pn)}aside{width:300px;border-right:1px solid var(--bd)}main{flex:1;min-width:0}
+header{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bd)}header b{flex:1;font:700 20px Georgia,serif}
+#list button{display:block;width:100%;text-align:left;background:none;border-radius:0;padding:12px;border-bottom:1px solid var(--bd);color:var(--tx)}
+#msgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.m{max-width:80%;background:var(--pn);border-radius:12px;padding:6px 10px;align-self:flex-start;overflow-wrap:anywhere}.m.me{align-self:flex-end;background:var(--me)}
+.m small{color:var(--mu)}.q{border-left:3px solid var(--ac);padding-left:6px;color:var(--mu)}.m img{max-width:100%;border-radius:8px}
+footer{display:flex;gap:6px;padding:8px;border-top:1px solid var(--bd)}footer input[type=text]{flex:1;min-width:0;background:var(--bg);border:1px solid var(--bd);border-radius:20px;padding:8px 12px}
+#rp{padding:4px 12px;color:var(--mu)}#bk{display:none}
+@media(max-width:700px){aside,main{width:100%}body.in aside{display:none}body:not(.in) main{display:none}#bk{display:block}}
+</style></head><body>
+<aside><header><b>Kestrel</b><button id=nc>Chat</button><button id=ns>Status</button><button id=jn>Join</button></header><div id=list></div></aside>
+<main><header><button id=bk class=g>‹</button><b id=ttl>Kestrel</b><small id=net></small>
+<select id=ex title="Disappearing messages"><option value=0>Keep</option><option value=86400>24 hours</option><option value=604800>7 days</option></select></header>
+<div id=msgs></div><div id=rp></div>
+<footer><label class=g>📎<input id=fi type=file accept="image/*" hidden></label><input id=tx type=text placeholder="Message" autocomplete=off><button id=mc class=g title="Hold to record">🎙</button><button id=sd>Send</button></footer></main>
+<script type=module>
+import {deriveKey,seal,open} from './crypto.js';
+const $=s=>document.querySelector(s),L=(k,d)=>JSON.parse(localStorage.getItem(k)||d),S=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+let cfg=L('cfg','{}'),rooms=L('rooms','[]'),outbox=L('outbox','[]'),cur=null,reply=null,busy=false;const keys={},st={};
+const gh=(p,o={})=>fetch('https://api.github.com'+p,{...o,headers:{Authorization:'Bearer '+cfg.token,Accept:'application/vnd.github+json',...(o.headers||{})}});
+const key=r=>keys[r.repo+r.n]??=deriveKey(r.secret,r.repo+'#'+r.n);
+const OK=/^data:(image|audio)\/[\w.+-]+(;codecs=[\w.]+)?;base64,[A-Za-z0-9+\/=]+$/;
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+function list(){const l=$('#list');l.replaceChildren(...rooms.map(r=>{const b=el('button','',(r.kind=='status'?'◔ ':'')+r.name);b.onclick=()=>go(r);return b}))}
+function add(r){rooms.push(r);S('rooms',rooms);list();go(r)}
+async function create(kind){const name=prompt('Name'),secret=crypto.randomUUID();if(!name)return;
+ const r=await gh(`/repos/${cfg.repo}/issues`,{method:'POST',body:JSON.stringify({title:'kestrel room'})}),j=await r.json();
+ if(!j.number)return alert('Could not create the room. Check the token can write issues on '+cfg.repo);
+ prompt('Share this invite code privately (it is the encryption key):',`${cfg.repo}#${j.number}#${secret}`);add({repo:cfg.repo,n:j.number,name,secret,kind})}
+function join(){const [repo,n,secret]=(prompt('Paste invite code')||'').split('#');if(!secret)return;add({repo,n:+n,name:'Chat '+n,secret,kind:'chat'})}
+function go(r){cur=r;document.body.classList.add('in');$('#ttl').textContent=r.name;$('#ex').value=r.kind=='status'?86400:0;draw();tick()}
+async function flush(){if(busy)return;busy=true;try{for(const o of [...outbox]){const r=rooms.find(x=>x.n==o.n&&x.repo==o.repo);if(!r){outbox.splice(outbox.indexOf(o),1);continue}
+ const body=`kestrel:v1 exp=${o.exp}\n`+await seal(await key(r),o.obj);
+ const res=await gh(`/repos/${o.repo}/issues/${o.n}/comments`,{method:'POST',body:JSON.stringify({body})}).catch(()=>null);
+ if(!res||!res.ok)break;outbox.splice(outbox.indexOf(o),1)}}finally{S('outbox',outbox);busy=false;$('#net').textContent=outbox.length?`sending ${outbox.length}…`:''}}
+async function send(obj){if(!cur)return;const ttl=+$('#ex').value;if(reply&&!obj.rx&&!obj.del)obj.re=reply.id;reply=null;$('#rp').textContent='';
+ outbox.push({repo:cur.repo,n:cur.n,obj,exp:ttl?Math.floor(Date.now()/1e3)+ttl:0});S('outbox',outbox);await flush();tick()}
+async function tick(){if(!cfg.token)return;await flush();if(!cur)return;const s=st[cur.n]??={since:'',etag:'',m:new Map()};
+ const r=await gh(`/repos/${cur.repo}/issues/${cur.n}/comments?per_page=100${s.since?'&since='+s.since:''}`,{headers:s.etag?{'If-None-Match':s.etag}:{}}).catch(()=>null);
+ if(!r||!r.ok)return;s.etag=r.headers.get('etag');const k=await key(cur);let fresh=0;
+ for(const c of await r.json()){if(c.updated_at>s.since)s.since=c.updated_at;if(s.m.has(c.id))continue;
+  const h=/^kestrel:v1 exp=(\d+)\n(\S+)$/.exec(c.body||'');if(!h)continue;
+  try{s.m.set(c.id,{id:c.id,by:c.user.login,exp:+h[1],...await open(k,h[2])});fresh++}catch{}}
+ if(fresh){draw();if(document.hidden&&Notification.permission=='granted')new Notification('Kestrel',{body:'New message in '+cur.name})}}
+function draw(){if(!cur)return;const all=[...(st[cur.n]?.m.values()||[])].sort((a,b)=>a.id-b.id),now=Date.now()/1e3,by=new Map(all.map(m=>[m.id,m]));
+ const dead=new Set(all.filter(m=>m.del&&by.get(m.del)?.by==m.by).map(m=>m.del)),rx={};for(const m of all)if(m.rx)(rx[m.rx]??=[]).push(m.e);
+ const box=$('#msgs');box.replaceChildren(...all.filter(m=>m.t!=null||m.a).filter(m=>!dead.has(m.id)&&!(m.exp&&m.exp<now)).map(m=>{
+  const d=el('div','m'+(m.by==cfg.me?' me':''));d.append(el('small','',m.by));
+  if(m.re&&by.get(m.re))d.append(el('div','q',(by.get(m.re).t||'attachment').slice(0,60)));
+  if(m.t)d.append(el('div','',m.t));
+  if(m.a&&OK.test(m.a)){const a=m.a.startsWith('data:image')?el('img'):el('audio');a.src=m.a;if(a.tagName=='AUDIO')a.controls=true;d.append(a)}
+  if(rx[m.id])d.append(el('div','',rx[m.id].join(' ')));
+  const bar=el('div'),b=(t,f)=>{const x=el('button','g',t);x.onclick=f;bar.append(x)};
+  b('↩',()=>{reply=m;$('#rp').textContent='Replying to '+m.by});b('😀',()=>{const e=prompt('Reaction','👍');if(e)send({rx:m.id,e})});
+  if(m.by==cfg.me)b('🗑',()=>send({del:m.id}));d.append(bar);return d}));box.scrollTop=box.scrollHeight}
+const rd=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
+async function shrink(f){const im=await createImageBitmap(f),sc=Math.min(1,480/Math.max(im.width,im.height)),c=document.createElement('canvas');
+ c.width=im.width*sc;c.height=im.height*sc;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+ for(let q=.7;q>.1;q-=.1){const u=c.toDataURL('image/jpeg',q);if(u.length<40000)return u}alert('Image is too detailed to send.')}
+let rec;async function mic(on){if(on){const s=await navigator.mediaDevices.getUserMedia({audio:true}),ch=[];rec=new MediaRecorder(s,{audioBitsPerSecond:12000});
+ rec.ondataavailable=e=>ch.push(e.data);rec.onstop=async()=>{s.getTracks().forEach(t=>t.stop());const u=await rd(new Blob(ch,{type:rec.mimeType}));u.length<40000?send({a:u}):alert('Voice note is too long (15 s max).')};
+ rec.start();setTimeout(()=>rec.state=='recording'&&rec.stop(),15000)}else if(rec?.state=='recording')rec.stop()}
+$('#nc').onclick=()=>create('chat');$('#ns').onclick=()=>create('status');$('#jn').onclick=join;$('#bk').onclick=()=>document.body.classList.remove('in');
+$('#sd').onclick=()=>{const t=$('#tx').value.trim();if(t){$('#tx').value='';send({t})}};$('#tx').onkeydown=e=>e.key=='Enter'&&$('#sd').click();
+$('#fi').onchange=async e=>{const u=await shrink(e.target.files[0]);if(u)send({a:u});e.target.value=''};
+$('#mc').onpointerdown=()=>mic(true);$('#mc').onpointerup=$('#mc').onpointerleave=()=>mic(false);
+addEventListener('offline',()=>$('#net').textContent='offline');addEventListener('online',tick);
+if(!cfg.token){cfg={repo:prompt('GitHub repo that hosts Kestrel (owner/name)'),token:prompt('GitHub token with issues write access')};}
+if(cfg.token){cfg.me=(await (await gh('/user')).json()).login;S('cfg',cfg);Notification.requestPermission();list();setInterval(tick,3000)}
+</script></body></html>
